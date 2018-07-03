@@ -1,0 +1,239 @@
+<?xml version="1.0" ?>
+<project name="Optix" width=512 height=512>
+    <assets>
+        <scenes>
+            <scene name="MainScene" type="OctreeByMat">
+                <file name="models\LargoCamoes\largoCamoes.nbo" />
+            </scene>
+        </scenes>
+
+        <viewports>
+            <viewport name="MainViewport">
+                <CLEAR_COLOR r="1.0" g="1.0" b="1.0" />
+            </viewport>
+            <viewport name="RightViewport">
+				<ORIGIN x="0.66" y="0" />
+				<SIZE width="0.34" height="1.0" />
+				<CLEAR_COLOR r="0.5" g="0.0" b="0.0" />
+			</viewport>
+			<viewport name="MiddleViewport" >
+				<ORIGIN x="0.33" y="0" />
+				<SIZE width="0.33" height="1.0" />
+				<CLEAR_COLOR r="0.5" g="0.0" b="0.0" />
+			</viewport>
+			<viewport name="LeftViewport">
+				<ORIGIN x=0.0 y=0.0 />
+				<SIZE width="0.33" height="1.0"/>
+				<CLEAR_COLOR r="0.0" g="0.5" b="0.0" />
+			</viewport>
+        </viewports>
+
+        <cameras>
+			<camera name="MainCamera" >
+				<projection TYPE="PERSPECTIVE" FOV=60.0 NEAR=0.3 FAR=1000.0 />
+				<POSITION x="-4.0" y="20.0" z="-29.0" />
+				<VIEW x="0.91" y="-0.29" z="0.26" />
+				<UP x="0" y="1" z="0" />
+			</camera>
+        </cameras>
+
+        <lights>
+            <light name="Sun">
+				<DIRECTION x="1" y="-1" z="-1" />
+			</light>
+        </lights>
+
+        <materialLibs>
+            <materialLib filename="Optix.mlib" />
+        </materialLibs>
+
+    </assets>
+
+    <pipelines>
+        <pipeline name="Raster" default=true>
+            <pass class="default" name="pass1">
+                <scenes>
+                    <scene name="MainScene" />
+                </scenes>
+				<camera name="MainCamera" />
+                <lights>
+                    <light name="Sun" />
+                </lights>
+                <viewport name="MainViewport" />
+                <injectionMaps>
+                    <map toMaterial="*">
+                        <shader fromMaterial="raster" fromLibrary="Optix" />
+                    </map>
+                </injectionMaps>
+            </pass>
+        </pipeline>
+
+        <pipeline name="Half-half" defaultCamera="MainCamera">
+            <pass class="default" name="pass2">
+                <scenes>
+                    <scene name="MainScene" />
+                </scenes>
+                <camera name="MainCamera" />
+                <lights>
+                    <light name="Sun" />
+                </lights>
+                <renderTarget name="info" fromLibrary="Optix" />
+                <injectionMaps>
+                    <map toMaterial="*">
+                        <shader fromMaterial="rasterh" fromLibrary="Optix" />
+                    </map>
+                </injectionMaps>
+            </pass>
+
+            <pass class="optix" name="pass3">
+                <scenes>
+                    <scene name="MainScene" />
+                </scenes>
+                <camera name="MainCamera" />
+                <lights>
+                    <light name="Sun" />
+                </lights>
+                <renderTarget name="optixR1" fromLibrary="Optix" />
+                
+                <optixEntryPoint>
+                    <optixProgram type="RayGen" file="optix/raytracing.ptx" proc="buffer_camera"/> 
+					<optixProgram type="Exception" file="optix/raytracing.ptx" proc="exception"/> 
+                </optixEntryPoint>
+                <optixDefaultMaterial>
+					<optixProgram type="Closest_Hit" ray="Phong" file="optix/raytracing.ptx" proc="shade"/> 
+					<optixProgram type="Miss" 		 ray="Phong" file="optix/raytracing.ptx" proc="miss"/> 
+					<optixProgram type="Miss" 		 ray="Shadow" file="optix/raytracing.ptx" proc="missShadow"/>
+					<optixProgram type="Any_Hit"  	 ray="Shadow" file="optix/raytracing.ptx" proc="any_hit_shadow"/> 
+				</optixDefaultMaterial>
+                <optixMaterialMap>
+					<optixMap to="__nau_material_lib:Grade*">
+						<optixProgram type="Any_Hit" ray="Phong" file="optix/raytracing.ptx" proc="alpha_test"/> 
+						<optixProgram type="Closest_Hit" ray="Phong" file="optix/raytracing.ptx" proc="shade"/> 
+						<optixProgram type="Any_Hit" ray="Shadow" file="optix/raytracing.ptx" proc="alpha_test_shadow"/> 
+					</optixMap>	
+					<optixMap to="__nau_material_lib:Vidro">
+						<optixProgram type="Any_Hit" ray="Phong" file="optix/raytracing.ptx" proc="keepGoing" />
+                        <!--optixProgram type="Closest_Hit" ray="Phong" file="optix/raytracing.ptx" proc="glassTest" /-->
+						<optixProgram type="Any_Hit" ray="Shadow" file="optix/raytracing.ptx" proc="keepGoingShadow" />
+					</optixMap>	
+				</optixMaterialMap>
+				<optixGeometryProgram>
+					<optixProgram type="Geometry_Intersection" file="optix/raytracing.ptx" proc="geometryintersection"/>
+					<optixProgram type="Bounding_Box" file="optix/raytracing.ptx" proc="boundingbox"/>
+				</optixGeometryProgram>
+				<optixVertexAttributes>
+					<attribute name="position"/>
+					<attribute name="normal"/>
+					<attribute name="texCoord0"/>
+				</optixVertexAttributes>
+                <optixMaterialAttributes>
+                    <valueof optixVar="diffuse" type="COLOR" context="CURRENT" component="DIFFUSE" />
+					<valueof optixVar="texCount" type="RENDERER" context="CURRENT" component="TEXTURE_COUNT" />
+                </optixMaterialAttributes>
+				<optixGlobalAttributes>
+					<valueof optixVar="lightDir" type="LIGHT" context="CURRENT" id=0 component="DIRECTION" />
+				</optixGlobalAttributes>
+				<optixInput>
+					<buffer var="pos_buffer" texture="Optix::posMap" />
+				</optixInput>
+            </pass>
+
+            <pass class="quad" name="pass4">
+                <viewport name="MainViewport" />
+                <materialMaps>
+                    <map fromMaterial="__Quad" toLibrary="Optix" toMaterial="half_combine" />
+                </materialMaps>
+            </pass>
+        </pipeline>
+
+        <pipeline name="Selective" defaultCamera="MainCamera">
+            <pass class="default" name="pass5">
+                <scenes>
+                    <scene name="MainScene" />
+                </scenes>
+                <camera name="MainCamera" />
+                <lights>
+                    <light name="Sun" />
+                </lights>
+                <renderTarget name="info" fromLibrary="Optix" />
+                <injectionMaps>
+                    <map toMaterial="*">
+                        <shader fromMaterial="rastersc" fromLibrary="Optix" />
+                    </map>
+                    <map toMaterial="Grade*">
+                        <shader fromMaterial="rasters" fromLibrary="Optix" />
+                    </map>
+                    <map toMaterial="Vidro">
+                        <shader fromMaterial="rasters" fromLibrary="Optix" />
+                    </map>
+                </injectionMaps>
+            </pass>
+
+            <pass class="optix" name="pass6">
+                <scenes>
+                    <scene name="MainScene" />
+                </scenes>
+                <camera name="MainCamera" />
+                <lights>
+                    <light name="Sun" />
+                </lights>
+                <renderTarget name="optixR2" fromLibrary="Optix" />
+                
+                <optixEntryPoint>
+                    <optixProgram type="RayGen" file="optix/raytracing.ptx" proc="buffer_camera"/> 
+					<optixProgram type="Exception" file="optix/raytracing.ptx" proc="exception"/> 
+                </optixEntryPoint>
+                <optixDefaultMaterial>
+					<optixProgram type="Closest_Hit" ray="Phong" file="optix/raytracing.ptx" proc="shade"/> 
+					<optixProgram type="Miss" 		 ray="Phong" file="optix/raytracing.ptx" proc="miss"/> 
+					<optixProgram type="Miss" 		 ray="Shadow" file="optix/raytracing.ptx" proc="missShadow"/>
+					<optixProgram type="Any_Hit"  	 ray="Shadow" file="optix/raytracing.ptx" proc="any_hit_shadow"/> 
+				</optixDefaultMaterial>
+                <optixMaterialMap>
+					<optixMap to="__nau_material_lib:Grade*">
+						<optixProgram type="Any_Hit" ray="Phong" file="optix/raytracing.ptx" proc="alpha_test"/> 
+						<optixProgram type="Closest_Hit" ray="Phong" file="optix/raytracing.ptx" proc="shade"/> 
+						<optixProgram type="Any_Hit" ray="Shadow" file="optix/raytracing.ptx" proc="alpha_test_shadow"/> 
+					</optixMap>	
+					<optixMap to="__nau_material_lib:Vidro">
+						<optixProgram type="Any_Hit" ray="Phong" file="optix/raytracing.ptx" proc="keepGoing" />
+						<optixProgram type="Any_Hit" ray="Shadow" file="optix/raytracing.ptx" proc="keepGoingShadow" />
+					</optixMap>	
+				</optixMaterialMap>
+				<optixGeometryProgram>
+					<optixProgram type="Geometry_Intersection" file="optix/raytracing.ptx" proc="geometryintersection"/>
+					<optixProgram type="Bounding_Box" file="optix/raytracing.ptx" proc="boundingbox"/>
+				</optixGeometryProgram>
+				<optixVertexAttributes>
+					<attribute name="position"/>
+					<attribute name="normal"/>
+					<attribute name="texCoord0"/>
+				</optixVertexAttributes>
+                <optixMaterialAttributes>
+                    <valueof optixVar="diffuse" type="COLOR" context="CURRENT" component="DIFFUSE" />
+					<valueof optixVar="texCount" type="RENDERER" context="CURRENT" component="TEXTURE_COUNT" />
+                </optixMaterialAttributes>
+				<optixGlobalAttributes>
+					<valueof optixVar="lightDir" type="LIGHT" context="CURRENT" id=0 component="DIRECTION" />
+				</optixGlobalAttributes>
+				<optixInput>
+					<buffer var="pos_buffer" texture="Optix::posMap" />
+				</optixInput>
+            </pass>
+
+            <pass class="quad" name="pass7">
+                <viewport name="MainViewport" />
+                <materialMaps>
+                    <map fromMaterial="__Quad" toLibrary="Optix" toMaterial="selective_combine" />
+                </materialMaps>
+            </pass>
+        </pipeline>
+
+    </pipelines>
+
+    <interface>
+        <window label="Main Window">
+			<pipelineList label="Mode" />
+        </window>
+    </interface>
+</project>
