@@ -1,0 +1,47 @@
+- Introdução
+	- motivação
+	- objetivos
+
+- Implementação
+	- Rasterização
+		- 4 shaders
+			- raster -> rasterização normal
+			- rasterh -> vertex -> mesmo que o anterior, fragment -> divide a meio (como na desmonstração do middle check)
+			- rasters -> vertex -> diferente dos outros shaders; põe a direção da luz é 0; processa vidro e grades
+						 fragment -> identifica se ldir está a zero e se estiver guarda no render target
+			- rastersc -> vertex -> processa o resto dos materiais que não vão ser raytraced (a distinção é feita pela NAU)
+						  fragment -> é o mesmo do rasters, faz rasterização para materiais com ldir != 0
+	- Ray tracing
+		- Optix
+			- explicar o passo do optix
+			- explicar o optix usa o rendertarget que é output do fragment shader rasters
+			- explicar as funções do optix e as decisões tomadas, tais como a forma como a componente especular é calculada, ou seja, se é o usado o compoente especular do material ou se é usado um fator de atenuação arbitrário e explicar cada um
+			- explicar se foi usado multisampling ou não, e como é feita a geração de números aleatórios
+
+	- Combinação
+		- 1 shader
+			- combine -> pega em duas texturas, verifica pixel a pixel se o w da primeira textura == 1, se sim, imprime a cor desse pixel nessa textura, caso contrário imprime a cor do pixel na mesma posição na segunda textura
+
+- Obstáculos na implementação
+	- só poder usar um passo optix, por causa da forma como está integrado com a NAU
+	- dificuldade de fazer debug
+	- escassez de documentação do Optix, estando restrito apenas a documentação oficial da NVIDIA
+	- problemas a identificar materiais no optix (problemas no projeto base)
+	- a cor refletida é diferente por causa da forma como o optix calcula cores, que é diferente da usada na rasterização
+	- as grades são retângulos opacos, e a textura só está mapeada na parte exterior, logo a sua reflexão não é apanhada pelo raytracing
+	- é especialmente difícil calcular as sombras seletivamente sem shadow maps, pelo que não foi implementado (não havia shadow maps no projeto inicial), além disso, mesmo com shadow maps, existiria um desafio que consiste em calcular as penumbras de uma forma similar ao que foi feito para as reflexões espceculares, ou seja, com o uso de máscaras (a distinção não poderia ser feita como foi feita nos virdros, teria de ser feita pela cor)
+
+- Resultados Obtidos
+	- reflexão especular parcial nos vidros
+	- as grades não são opacas, mas a textura tem um coeficiente de opacidade
+	- mostrar exemplos com e sem multisampling
+	- mostrar exemplos com half
+	- mostrar exemplos com visibilidade da cena e da cena refletida (se for possível)
+
+- Considerações
+	- falar de tentativa de implementação de sombras seletivas sem shadow maps e porque razão não foi bem sucedido
+	- Trabalho Futuro
+		- tunel vision, por exemplo, processar com raytracing zonas que estão mais no centro da janela e com rasterização zonas mais afastadas e fazer um smoothstep 
+
+- Conclusão
+	
