@@ -14,7 +14,6 @@
             <SIZE width=1024 height=1024 />
             <colors>
                 <color name="offscreenrenderer" format="RGBA" internalFormat="RGBA32F" type="FLOAT" />
-                <color name="shadowrenderer" format="RGBA" internalFormat="RGBA32F" type="FLOAT" />
             </colors>
         </renderTarget>
     </renderTargets>

@@ -92,58 +92,6 @@ RT_PROGRAM void buffer_camera_ms(void){
 	}
 
 	float4 color = make_float4(0.0);
-	int sqrt_num_samples = 2;
-	int samples = sqrt_num_samples * sqrt_num_samples;
-	unsigned int seedi, seedj;
-
-	float2 d = make_float2(launch_index) / make_float2(launch_dim) * 2.f - 1.f;
-
-	float2 scale =  1.0 / (make_float2(launch_dim) * sqrt_num_samples) ;
-	
-
-	for (int i = 0; i < sqrt_num_samples; ++i) {
-		for (int j = 0; j < sqrt_num_samples; ++j) {
-
-			seedi = tea<4>(i,j);
-			seedi = tea<4>(launch_dim.x*seedi, launch_index.y*seedi);
-			seedj = tea<4>(launch_dim.x*launch_dim.y, seedi);
-			
-			float2 sample = d + make_float2((i + 1)*rnd(seedi), (j + 1)*rnd(seedj)) * scale;
-			float3 ray_origin = eye;
-			float3 ray_direction = normalize(sample.x*U*fov + sample.y*V*fov + W);
-	
-			optix::Ray ray = optix::make_Ray(ray_origin, ray_direction, Phong, 0.000000001, RT_DEFAULT_MAX);
-	
-			PerRayDataResult prd;
-			prd.result = make_float4(1.0f);
-			prd.depth = 0;
-	
-			rtTrace(top_object, ray, prd);
-			color += prd.result;
-		}
-	}
-	output0[launch_index] = color / samples;
-}
-
-RT_PROGRAM void pinhole_camera() {
-	float2 d = make_float2(launch_index) / make_float2(launch_dim) * 2.f - 1.f;
-	float3 ray_origin = eye;
-	float3 ray_direction = normalize(d.x*U*fov + d.y*V*fov + W);
-	
-	optix::Ray ray = optix::make_Ray(ray_origin, ray_direction, Phong, 0.00000000001, RT_DEFAULT_MAX);
-	
-	PerRayDataResult prd;
-	prd.result = make_float4(1.0f);
-	prd.depth = 0;
-	
-	rtTrace(top_object, ray, prd);
-
-	output0[launch_index] = prd.result;
-}
-
-
-RT_PROGRAM void pinhole_camera_ms() {
-	float4 color = make_float4(0.0);
 	int sqrt_num_samples = 4;
 	int samples = sqrt_num_samples * sqrt_num_samples;
 	unsigned int seedi, seedj;
@@ -175,9 +123,7 @@ RT_PROGRAM void pinhole_camera_ms() {
 		}
 	}
 	output0[launch_index] = color / samples;
-	//output0[launch_index] = make_float4(1, 0, 0, 0);
 }
-
 
 RT_PROGRAM void any_hit_shadow() {
 	prdr.transmit = 0.0f;
@@ -204,11 +150,6 @@ RT_PROGRAM void keepGoingShadow() {
 RT_PROGRAM void keepGoing() {
 	prdr.result *= 0.9;
 	rtIgnoreIntersection();
-}
-
-RT_PROGRAM void glassTest(){
-	prdr.result = make_float4(1.0, 0.0, 0.0, 1.0);
-	rtTerminateRay();
 }
 
 
@@ -264,10 +205,15 @@ RT_PROGRAM void shadePointLight() {
 }
 
 RT_PROGRAM void shade_glass() {
+
+	if (prdr.depth > 3){
+		return;
+	}
+
 	float3 n = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 	float3 hit_point = ray.origin + t_hit * ray.direction;
 	float3 refl = reflect(ray.direction, n);
-	float atenuation = 0.75;
+	float atenuation = 0.5f;
 	PerRayDataResult prd;
 
 	optix::Ray refl_ray(hit_point, refl, Phong, 0.000002);
