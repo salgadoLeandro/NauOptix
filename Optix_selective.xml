@@ -133,6 +133,7 @@
 				</optixVertexAttributes>
                 <optixMaterialAttributes>
                     <valueof optixVar="diffuse" type="COLOR" context="CURRENT" component="DIFFUSE" />
+                    <valueof optixVar="specular" type="COLOR" context="CURRENT" component="SPECULAR" />
 					<valueof optixVar="texCount" type="RENDERER" context="CURRENT" component="TEXTURE_COUNT" />
                 </optixMaterialAttributes>
 				<optixGlobalAttributes>

@@ -26,21 +26,20 @@ void main() {
     vec3 n;
     float intensity;
 
-    light_dir = -normalize(DataIn.l_dir);
-    n = normalize(DataIn.normal);
-    intensity = max(dot(light_dir, n), 0.0);
-
-    light_intensity_diffuse = l_color * intensity;
-
-    if (texCount == 0) {
-        color = diffuse * light_intensity_diffuse + diffuse * 0.3;
-    } else {
-        color = (diffuse * light_intensity_diffuse + emission + 0.3) * texture(texUnit, DataIn.texCoord);
-    }
-
     outNormal = vec4(normalize(DataIn.normal), 1.0);
     outTexCoord = vec2(DataIn.texCoord);
-    if (gl_FragCoord.y >= (windowSize.x / 2)) {
+    
+    if (gl_FragCoord.y >= (windowSize.y / 2)) {
+        light_dir = -normalize(DataIn.l_dir);
+        n = normalize(DataIn.normal);
+        intensity = max(dot(light_dir, n), 0.0);
+
+        light_intensity_diffuse = l_color * intensity;
+        if (texCount == 0) {
+            color = diffuse * light_intensity_diffuse + diffuse * 0.3;
+        } else {
+            color = (diffuse * light_intensity_diffuse + emission + 0.3) * texture(texUnit, DataIn.texCoord);
+        }
         outColor = vec4(color.xyz, 1.0);
     }
     else {

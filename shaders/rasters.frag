@@ -28,7 +28,7 @@ void main() {
     outNormal = vec4(normalize(DataIn.normal), 1.0);
     outTexCoord = vec2(DataIn.texCoord);
     
-    if(DataIn.l_dir.x == 0 && DataIn.l_dir.y == 0 && DataIn.l_dir.z == 0){
+    if(DataIn.l_dir == vec3(0.0)){
         outPosition = vec4(DataIn.pos.xyz, 1.0);
         outColor = vec4(0.0);
     } else {

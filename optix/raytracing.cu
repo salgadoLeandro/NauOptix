@@ -19,6 +19,7 @@ rtDeclareVariable(float,         fov, , );
 
 // Material
 rtDeclareVariable(float4, diffuse, , );
+rtDeclareVariable(float4, specular, , );
 rtDeclareVariable(int, texCount, , );
 
 // Light
@@ -51,7 +52,7 @@ rtDeclareVariable(optix::Ray, ray, rtCurrentRay, );
 rtDeclareVariable(uint2, launch_index, rtLaunchIndex, );
 rtDeclareVariable(uint2, launch_dim,   rtLaunchDim, );
 rtDeclareVariable(PerRayDataResult, prdr, rtPayload, );
-rtDeclareVariable(float,      t_hit,        rtIntersectionDistance, );
+rtDeclareVariable(float, t_hit, rtIntersectionDistance, );
 rtDeclareVariable(float3, texCoord, attribute texcoord, ); 
 rtDeclareVariable(float3, geometric_normal, attribute geometric_normal, ); 
 rtDeclareVariable(float3, shading_normal, attribute shading_normal, ); 
@@ -60,14 +61,13 @@ rtDeclareVariable(int, Phong, , );
 rtDeclareVariable(int, Shadow, , );
 
 
-
 RT_PROGRAM void buffer_camera(void) {
 	float4 i = tex2D(pos_buffer, launch_index.x, launch_index.y);
 	PerRayDataResult prd;
 	prd.result = make_float4(1.0f);
 	prd.depth = 0;
 	
-	if(i.w < 1.0f) { 
+	if(i.w == 0.0f) { 
 		output0[launch_index] = make_float4(1.0, 1.0, 1.0, 0.0f); 
 		return; 
 	}
@@ -154,10 +154,9 @@ RT_PROGRAM void keepGoing() {
 
 
 RT_PROGRAM void shade() {
-//	prdr.result = make_float4(0.0f, 1.0f, 0.0f, 1.0f);
+	//prdr.result = make_float4(0.0f, 1.0f, 0.0f, 1.0f);
 	PerRayDataResult shadow_prd;
     shadow_prd.transmit = 1.0f;
-
 
 	float3 lDir = make_float3(-lightDir);
 	float3 world_geometric_normal = normalize( rtTransformNormal( RT_OBJECT_TO_WORLD, shading_normal ) );
@@ -177,7 +176,7 @@ RT_PROGRAM void shade() {
 
 
 RT_PROGRAM void shadePointLight() {
-//	prdr.result = make_float4(0.0f, 1.0f, 0.0f, 1.0f);
+	//prdr.result = make_float4(0.0f, 1.0f, 0.0f, 1.0f);
 	PerRayDataResult shadow_prd;
     shadow_prd.transmit = 1.0f;
 	shadow_prd.entrance = 0.0f;
@@ -213,7 +212,7 @@ RT_PROGRAM void shade_glass() {
 	float3 n = normalize(rtTransformNormal(RT_OBJECT_TO_WORLD, shading_normal));
 	float3 hit_point = ray.origin + t_hit * ray.direction;
 	float3 refl = reflect(ray.direction, n);
-	float atenuation = 0.5f;
+	//float atenuation = 0.5f;
 	PerRayDataResult prd;
 
 	optix::Ray refl_ray(hit_point, refl, Phong, 0.000002);
@@ -221,7 +220,8 @@ RT_PROGRAM void shade_glass() {
 	prd.result = make_float4(1.0f);
 	prd.depth = prdr.depth + 1;
 	rtTrace(top_object, refl_ray, prd);
-	prdr.result = prd.result * atenuation;
+	//prdr.result = prd.result * atenuation;
+	prdr.result = prd.result * specular;
 }
 
 
