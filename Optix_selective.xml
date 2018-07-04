@@ -1,5 +1,5 @@
 <?xml version="1.0" ?>
-<project name="Optix" width=512 height=512>
+<project name="OptiX Selective" width=512 height=512>
     <assets>
         <scenes>
             <scene name="MainScene" type="OctreeByMat">
