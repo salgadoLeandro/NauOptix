@@ -45,6 +45,6 @@ void main() {
         }
 
         outPosition = vec4(0.0);
-        outColor = vec4(color);
+        outColor = vec4(color.xyz, 1.0);
     }
 }

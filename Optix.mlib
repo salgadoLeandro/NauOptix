@@ -10,16 +10,11 @@
                 <color name="texMap" internalFormat="RG16F" />
             </colors>
         </renderTarget>
-        <renderTarget name="optixR1">
+        <renderTarget name="optixR">
             <SIZE width=1024 height=1024 />
             <colors>
-                <color name="offscreenrenderer1" format="RGBA" internalFormat="RGBA32F" type="FLOAT" />
-            </colors>
-        </renderTarget>
-        <renderTarget name="optixR2">
-            <SIZE width=1024 height=1024 />
-            <colors>
-                <color name="offscreenrenderer2" format="RGBA" internalFormat="RGBA32F" type="FLOAT" />
+                <color name="offscreenrenderer" format="RGBA" internalFormat="RGBA32F" type="FLOAT" />
+                <color name="shadowrenderer" format="RGBA" internalFormat="RGBA32F" type="FLOAT" />
             </colors>
         </renderTarget>
     </renderTargets>
@@ -109,7 +104,7 @@
             </shader>
             <textures>
                 <texture UNIT="0" name="colorMap" />
-                <texture UNIT="1" name="offscreenrenderer1" />
+                <texture UNIT="1" name="offscreenrenderer" />
             </textures>
         </material>
 
@@ -182,7 +177,7 @@
             </shader>
             <textures>
                 <texture UNIT="0" name="colorMap" />
-                <texture UNIT="1" name="offscreenrenderer2" />
+                <texture UNIT="1" name="offscreenrenderer" />
             </textures>
         </material>
 

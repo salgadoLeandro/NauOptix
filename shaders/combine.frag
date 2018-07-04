@@ -11,8 +11,5 @@ void main() {
     vec4 cr = texture(raster, TexCoord);
     vec4 rr = texture(raytrace, TexCoord);
 
-    if (cr.w != 0.0f && rr.w == 0.0f)
-        outColor = cr;
-    else
-        outColor = rr;
+    outColor = cr.w == 1 ? cr : rr;
 }

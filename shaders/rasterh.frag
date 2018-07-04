@@ -38,14 +38,13 @@ void main() {
         color = (diffuse * light_intensity_diffuse + emission + 0.3) * texture(texUnit, DataIn.texCoord);
     }
 
-    //outNormal = vec4(normalize(DataIn.normal) * 0.5 + 0.5, 1.0);
     outNormal = vec4(normalize(DataIn.normal), 1.0);
     outTexCoord = vec2(DataIn.texCoord);
-    /*if (gl_FragCoord.y >= (windowSize.x / 2)) {
-        outColor = color;
+    if (gl_FragCoord.y >= (windowSize.x / 2)) {
+        outColor = vec4(color.xyz, 1.0);
     }
-    else {*/
+    else {
         outPosition = vec4(DataIn.pos.xyz, 1.0);
         outColor = vec4(0.0);
-    //}
+    }
 }
